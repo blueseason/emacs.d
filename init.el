@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 (add-to-list 'load-path (expand-file-name "~/.emacs.d"))
-
+(load-file "~/.emacs.d/mgmt/cedet-1.0pre7/common/cedet.el")
 ;;----------------------------------------------------------------------------
 ;; Which functionality to enable (use t or nil for true and false)
 ;;----------------------------------------------------------------------------
@@ -40,6 +40,8 @@
 (require 'init-mmm)
 (require 'init-growl)
 
+(require 'init-me)
+
 (require 'init-editing-utils)
 
 (require 'init-darcs)
@@ -61,6 +63,8 @@
 (require 'init-haskell)
 (require 'init-ruby-mode)
 (require 'init-rails)
+;(require 'init-java)
+
 
 (require 'init-lisp)
 (require 'init-slime)
@@ -99,6 +103,8 @@
 ;; Locales (setting them earlier in this file doesn't work in X)
 ;;----------------------------------------------------------------------------
 (require 'init-locales)
+
+
 
 
 ;; Local Variables:
