@@ -1,16 +1,15 @@
 ;; See http://bc.tech.coop/blog/070927.html
 (add-auto-mode 'lisp-mode "\\.cl\\'")
 (add-hook 'lisp-mode-hook (lambda ()
-                            (cond ((not (featurep 'slime))
-                                   (require 'slime)
-                                   (normal-mode)))))
+                            (unless (featurep 'slime)
+                              (require 'slime)
+                              (normal-mode))))
 
-(eval-after-load 'slime
-  '(progn
-     (add-to-list 'slime-lisp-implementations
-		  '(sbcl ("sbcl") :coding-system utf-8-unix))
-     (add-to-list 'slime-lisp-implementations
-		  '(cmucl ("lisp") :coding-system iso-latin-1-unix))))
+;;(after-load 'slime
+;;  (add-to-list 'slime-lisp-implementations
+;;                '(sbcl ("sbcl") :coding-system utf-8-unix))
+;;  (add-to-list 'slime-lisp-implementations
+;;               '(cmucl ("lisp") :coding-system iso-latin-1-unix)))
 
 ;; From http://bc.tech.coop/blog/070515.html
 (defun lispdoc ()
