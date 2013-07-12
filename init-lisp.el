@@ -1,61 +1,11 @@
+(require-package 'elisp-slime-nav)
+(dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
+  (add-hook hook 'elisp-slime-nav-mode))
+
+(require-package 'lively)
+
+(require-package 'pretty-mode)
 (autoload 'turn-on-pretty-mode "pretty-mode")
-
-;; ----------------------------------------------------------------------------
-;; Paredit
-;; ----------------------------------------------------------------------------
-(autoload 'enable-paredit-mode "paredit")
-
-
-(defun maybe-map-paredit-newline ()
-  (unless (or (memq major-mode '(inferior-emacs-lisp-mode nrepl-mode))
-              (minibufferp))
-    (local-set-key (kbd "RET") 'paredit-newline)))
-
-(add-hook 'paredit-mode-hook 'maybe-map-paredit-newline)
-
-(eval-after-load 'paredit
-  '(progn
-     (diminish 'paredit-mode " Par")
-     ;; These are handy everywhere, not just in lisp modes
-     (global-set-key (kbd "M-(") 'paredit-wrap-round)
-     (global-set-key (kbd "M-[") 'paredit-wrap-square)
-     (global-set-key (kbd "M-{") 'paredit-wrap-curly)
-
-     (global-set-key (kbd "M-)") 'paredit-close-round-and-newline)
-     (global-set-key (kbd "M-]") 'paredit-close-square-and-newline)
-     (global-set-key (kbd "M-}") 'paredit-close-curly-and-newline)
-
-     (dolist (binding (list (kbd "C-<left>") (kbd "C-<right>")
-                            (kbd "C-M-<left>") (kbd "C-M-<right>")))
-       (define-key paredit-mode-map binding nil))
-
-     ;; Disable kill-sentence, which is easily confused with the kill-sexp
-     ;; binding, but doesn't preserve sexp structure
-     (define-key paredit-mode-map [remap kill-sentence] nil)
-     (define-key paredit-mode-map [remap backward-kill-sentence] nil)))
-
-
-;; Compatibility with other modes
-
-(suspend-mode-during-cua-rect-selection 'paredit-mode)
-
-
-;; Use paredit in the minibuffer
-(add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
-
-(defvar paredit-minibuffer-commands '(eval-expression
-                                      pp-eval-expression
-                                      eval-expression-with-eldoc
-                                      ibuffer-do-eval
-                                      ibuffer-do-view-and-eval)
-  "Interactive commands for which paredit should be enabled in the minibuffer.")
-
-(defun conditionally-enable-paredit-mode ()
-  "Enable paredit during lisp-related minibuffer commands."
-  (if (memq this-command paredit-minibuffer-commands)
-      (enable-paredit-mode)))
-
-
 
 ;; ----------------------------------------------------------------------------
 ;; Hippie-expand
@@ -71,56 +21,94 @@
 ;; Automatic byte compilation
 ;; ----------------------------------------------------------------------------
 
+(require-package 'auto-compile)
 (auto-compile-on-save-mode 1)
-;; TODO: also use auto-compile-on-load-mode
-;; TODO: exclude .dir-locals.el
+(auto-compile-on-load-mode 1)
 
 ;; ----------------------------------------------------------------------------
 ;; Highlight current sexp
 ;; ----------------------------------------------------------------------------
 
-;; Prevent flickery behaviour due to hl-sexp-mode unhighlighting before each command
-(eval-after-load 'hl-sexp
-  '(defadvice hl-sexp-mode (after unflicker (turn-on) activate)
-     (when turn-on
-       (remove-hook 'pre-command-hook #'hl-sexp-unhighlight))))
+(require-package 'hl-sexp)
 
+;; Prevent flickery behaviour due to hl-sexp-mode unhighlighting before each command
+(after-load 'hl-sexp
+  (defadvice hl-sexp-mode (after unflicker (&optional turn-on) activate)
+    (when turn-on
+      (remove-hook 'pre-command-hook #'hl-sexp-unhighlight))))
+
+
+
+;;; Support byte-compilation in a sub-process, as
+;;; required by highlight-cl
+
+(defun sanityinc/byte-compile-file-batch (filename)
+  "Byte-compile FILENAME in batch mode, ie. a clean sub-process."
+  (interactive "fFile to byte-compile in batch mode: ")
+  (let ((emacs (car command-line-args)))
+    (compile
+     (concat
+      emacs " "
+      (mapconcat
+       'shell-quote-argument
+       (list "-Q" "-batch" "-f" "batch-byte-compile" filename)
+       " ")))))
 
 
 ;; ----------------------------------------------------------------------------
 ;; Enable desired features for all lisp modes
 ;; ----------------------------------------------------------------------------
+(require-package 'rainbow-delimiters)
+(require-package 'redshank)
+(after-load 'redshank
+  (diminish 'redshank-mode))
+
 
 (defun sanityinc/lisp-setup ()
   "Enable features useful in any Lisp mode."
+  (rainbow-delimiters-mode t)
   (enable-paredit-mode)
-  (turn-on-eldoc-mode))
+  (turn-on-eldoc-mode)
+  (redshank-mode))
 
 (defun sanityinc/emacs-lisp-setup ()
   "Enable features useful when working with elisp."
-  (rainbow-delimiters-mode t)
   (elisp-slime-nav-mode t)
   (set-up-hippie-expand-for-elisp)
-  (ac-emacs-lisp-mode-setup)
-  (checkdoc-minor-mode))
+  (ac-emacs-lisp-mode-setup))
 
-(let* ((elispy-hooks '(emacs-lisp-mode-hook
-                       ielm-mode-hook))
-       (lispy-hooks (append elispy-hooks '(lisp-mode-hook
-                                           inferior-lisp-mode-hook
-                                           lisp-interaction-mode-hook))))
-  (dolist (hook lispy-hooks)
-    (add-hook hook 'sanityinc/lisp-setup))
-  (dolist (hook elispy-hooks)
-    (add-hook hook 'sanityinc/emacs-lisp-setup)))
+(defconst sanityinc/elispy-modes
+  '(emacs-lisp-mode ielm-mode)
+  "Major modes relating to elisp.")
 
+(defconst sanityinc/lispy-modes
+  (append sanityinc/elispy-modes
+          '(lisp-mode inferior-lisp-mode lisp-interaction-mode))
+  "All lispy major modes.")
 
+(require 'derived)
+
+(dolist (hook (mapcar #'derived-mode-hook-name sanityinc/lispy-modes))
+  (add-hook hook 'sanityinc/lisp-setup))
+
+(dolist (hook (mapcar #'derived-mode-hook-name sanityinc/elispy-modes))
+  (add-hook hook 'sanityinc/emacs-lisp-setup))
+
+(defun sanityinc/maybe-check-parens ()
+  "Run `check-parens' if this is a lispy mode."
+  (when (memq major-mode sanityinc/lispy-modes)
+    (check-parens)))
+
+(add-hook 'after-save-hook #'sanityinc/maybe-check-parens)
+
+(require-package 'eldoc-eval)
 (require 'eldoc-eval)
 
 (add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
 
 (define-key emacs-lisp-mode-map (kbd "C-x C-a") 'pp-macroexpand-last-sexp)
+(define-key emacs-lisp-mode-map (kbd "C-x C-e") 'pp-eval-last-sexp)
 
 
 ;; ----------------------------------------------------------------------------
@@ -158,6 +146,11 @@
     ad-do-it))
 
 
+
+(require-package 'macrostep)
+
+(after-load 'lisp-mode
+  (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
 
 
 

@@ -1,3 +1,9 @@
+(when (< emacs-major-version 24)
+  (require-package 'color-theme))
+
+(require-package 'color-theme-sanityinc-solarized)
+(require-package 'color-theme-sanityinc-tomorrow)
+
 ;;------------------------------------------------------------------------------
 ;; Old-style color theming support (via color-theme.el)
 ;;------------------------------------------------------------------------------
@@ -58,16 +64,12 @@ ignored: use `custom-enabled-themes' instead."
 (defun light ()
   "Activate a light color theme."
   (interactive)
-  (if (boundp 'custom-enabled-themes)
-      (custom-set-variables '(custom-enabled-themes '(sanityinc-solarized-light)))
-    (color-theme-sanityinc-solarized-light)))
+  (color-theme-sanityinc-solarized-light))
 
 (defun dark ()
   "Activate a dark color theme."
   (interactive)
-  (if (boundp 'custom-enabled-themes)
-      (custom-set-variables '(custom-enabled-themes '(sanityinc-solarized-dark)))
-    (color-theme-sanityinc-solarized-dark)))
+  (color-theme-sanityinc-solarized-dark))
 
 
 (provide 'init-themes)

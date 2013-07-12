@@ -1,9 +1,8 @@
-;;------------------------------------------------------------------------------
-;; Find and load the correct package.el
-;;------------------------------------------------------------------------------
+;;; Find and load the correct package.el
 
 ;; When switching between Emacs 23 and 24, we always use the bundled package.el in Emacs 24
-(let ((package-el-site-lisp-dir (expand-file-name "~/.emacs.d/site-lisp/package")))
+(let ((package-el-site-lisp-dir
+       (expand-file-name "site-lisp/package" user-emacs-directory)))
   (when (and (file-directory-p package-el-site-lisp-dir)
              (> emacs-major-version 23))
     (message "Removing local package.el from load-path to avoid shadowing bundled version")
@@ -12,20 +11,8 @@
 (require 'package)
 
 
-;;------------------------------------------------------------------------------
-;; Patch up annoying package.el quirks
-;;------------------------------------------------------------------------------
-
-(defadvice package-generate-autoloads (after close-autoloads (name pkg-dir) activate)
-  "Stop package.el from leaving open autoload files lying around."
-  (let ((path (expand-file-name (concat name "-autoloads.el") pkg-dir)))
-    (with-current-buffer (find-file-existing path)
-      (kill-buffer nil))))
-
-
-;;------------------------------------------------------------------------------
-;; Add support to package.el for pre-filtering available packages
-;;------------------------------------------------------------------------------
+
+;;; Add support to package.el for pre-filtering available packages
 
 (defvar package-filter-function nil
   "Optional predicate function used to internally filter packages used by package.el.
@@ -38,19 +25,45 @@ ARCHIVE is the string name of the package archive.")
   (around filter-packages (package archive) activate)
   "Add filtering of available packages using `package-filter-function', if non-nil."
   (when (or (null package-filter-function)
-            (funcall package-filter-function
-                     (car package)
-                     (package-desc-vers (cdr package))
-                     archive))
+	    (funcall package-filter-function
+		     (car package)
+		     (funcall (if (fboundp 'package-desc-version)
+				  'package--ac-desc-version
+				'package-desc-vers)
+			      (cdr package))
+		     archive))
     ad-do-it))
 
 
-;;------------------------------------------------------------------------------
-;; On-demand installation of packages
-;;------------------------------------------------------------------------------
+
+;;; Standard package repositories
+
+(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+
+;; We include the org repository for completeness, but don't normally
+;; use it.
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+
+(when (< emacs-major-version 24)
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+
+;;; Also use Melpa for most packages
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+
+;; But don't take Melpa versions of certain packages
+(setq package-filter-function
+      (lambda (package version archive)
+        (or (not (string-equal archive "melpa"))
+            (not (memq package '(slime))))))
+
+
+
+;;; On-demand installation of packages
 
 (defun require-package (package &optional min-version no-refresh)
-  "Ask elpa to install given PACKAGE."
+  "Install given PACKAGE, optionally requiring MIN-VERSION.
+If NO-REFRESH is non-nil, the available package lists will not be
+re-downloaded in order to locate PACKAGE."
   (if (package-installed-p package min-version)
       t
     (if (or (assoc package package-archive-contents) no-refresh)
@@ -60,41 +73,11 @@ ARCHIVE is the string name of the package archive.")
         (require-package package min-version t)))))
 
 
-;;------------------------------------------------------------------------------
-;; Standard package repositories
-;;------------------------------------------------------------------------------
-
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-
-;; We include the org repository for completeness, but don't normally
-;; use it.
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-
-
-;;------------------------------------------------------------------------------
-;; Also use Melpa for some packages built straight from VC
-;;------------------------------------------------------------------------------
-
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
-
-(defvar melpa-exclude-packages
-  '(slime)
-  "Don't install Melpa versions of these packages.")
-
-;; Don't take Melpa versions of certain packages
-(setq package-filter-function
-      (lambda (package version archive)
-        (and
-         (not (memq package '(eieio)))
-         (or (not (string-equal archive "melpa"))
-             (not (memq package melpa-exclude-packages))))))
-
-
-;;------------------------------------------------------------------------------
-;; Fire up package.el and ensure the following packages are installed.
-;;------------------------------------------------------------------------------
+
+;;; Fire up package.el
 
 (package-initialize)
+
 
 (require-package 'ido-ubiquitous)
 (when (< emacs-major-version 24)
@@ -208,5 +191,7 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'unfill)
 (require-package 'vc-darcs)
 (require-package 'whole-line-or-region)
+
+
 
 (provide 'init-elpa)
