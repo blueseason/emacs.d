@@ -68,7 +68,11 @@
 (add-hook 'c-mode-common-hook                                                                                                       
       '(lambda ()                                                                                                                   
         (require 'xcscope)))
-(require 'xcscope)
+
+(add-hook 'js2-mode'
+          '(lambda ()
+             (require 'xcscope)))
+
 (setq cscope-do-not-update-database t)
 
 (require 'psvn)
@@ -97,11 +101,14 @@
 ;;(setq load-path (cons "~/project/org-7.8.06/lisp" load-path))
 ;;(setq load-path (cons "~/project/org-7.8.06/contrib/lisp" load-path))
 
+(setq org-plantuml-jar-path
+      (expand-file-name "~/.emacs.d/plugin/plantuml.jar"))
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
    (emacs-lisp . t)
    (ruby . t)
+   (dot . t)
    (plantuml . t)
    ))
 
@@ -141,5 +148,7 @@
              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
              ("\\paragraph{%s}" . "\\paragraph*{%s}")
              ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+(require 'one)
 
 (provide 'init-me)
