@@ -8,17 +8,58 @@
 ;;(semantic-load-enable-guady-code-helpers)
 
 (setq ac-auto-start 4)
-(global-set-key "\M-/" 'auto-complete)
+;(global-set-key "\M-/" 'auto-complete)
 
-(defun ac-semantic-candidate (prefix)                                           
-  (if (memq major-mode                                                                                             
-            '(c-mode c++-mode jde-mode java-mode))                                                                
-      (mapcar 'semantic-tag-name                                                                                    
-              (ignore-errors                                                                                        
-                (or (semantic-ia-get-completions                                                                    
-                     (semantic-analyze-current-context) (point))                                                 
-                    (senator-find-tag-for-completion (regexp-quote prefix)))))))
+;; (defun ac-semantic-candidate (prefix)                                           
+;;   (if (memq major-mode                                                                                             
+;;             '(c-mode c++-mode jde-mode java-mode))                                                                
+;;       (mapcar 'semantic-tag-name                                                                                    
+;;               (ignore-errors                                                                                        
+;;                 (or (semantic-ia-get-completions                                                                    
+;;                      (semantic-analyze-current-context) (point))                                                 
+;;                     (senator-find-tag-for-completion (regexp-quote prefix)))))))
 
+(require 'auto-complete)
+(require 'auto-complete-config)
+(require 'auto-complete-clang)
+
+;; 添加c-mode和c++-mode的hook，开启auto-complete的clang扩展  
+(defun wttr/ac-cc-mode-setup ()
+  (make-local-variable 'ac-auto-start)
+  (setq ac-auto-start t)              ;auto complete using clang is CPU sensitive  
+  (setq ac-sources (append '(ac-source-clang ac-source-yasnippet) ac-sources)))
+(add-hook 'c-mode-hook 'wttr/ac-cc-mode-setup)  
+(add-hook 'c++-mode-hook 'wttr/ac-cc-mode-setup)
+(ac-config-default)
+(global-auto-complete-mode t)
+;(define-key ac-mode-map  [(tab)] 'auto-complete)
+
+;; (setq ac-clang-flags  (list
+;;                        "-I/usrinclude"
+;;                        "-I/usr/src/linux-headers-3.5.0-43/include"
+;;                        "-I/usr/include/c++/4.6.3/"
+;;                        ))
+
+
+(setq ac-clang-flags
+      (mapcar(lambda (item)(concat "-I" item))
+         (split-string
+ "
+ /usr/include/c++/4.6
+ /usr/include/c++/4.6/x86_64-linux-gnu
+ /usr/include/c++/4.6/backward
+ /usr/include/c++/4.6/ext
+ /usr/include/c++/4.6/bits
+ /usr/include/c++/4.6/parallel
+ /usr/include/c++/4.6/profile
+ /usr/include/c++/4.6/tr1
+ /usr/src/linux-headers-3.5.0-43/include
+ /usr/local/include
+ /usr/lib/gcc/x86-64-linux-gnu/4.4.5/include
+ /usr/lib/gcc/x86-64-linux-gnu/4.4.5/include-fixed
+ /usr/include/x86-64-linux-gnu
+ /usr/include
+")))  
 ;; set htmlize
 (add-to-list 'load-path "~/.emacs.d/plugin/html/")
 (require 'htmlize)
@@ -27,6 +68,7 @@
 (add-hook 'c-mode-common-hook                                                                                                       
       '(lambda ()                                                                                                                   
         (require 'xcscope)))
+(require 'xcscope)
 (setq cscope-do-not-update-database t)
 
 (require 'psvn)
@@ -62,6 +104,11 @@
    (ruby . t)
    (plantuml . t)
    ))
+
+
+(setq org-plantuml-jar-path
+      (expand-file-name "~/.emacs.d/plugin/plantuml.jar"))
+(setq org-confirm-babel-evaluate nil)
 
 (setq org-emphasis-alist (quote (("*" bold "<b>" "</b>") 
                                  ("/" italic "<i>" "</i>")
