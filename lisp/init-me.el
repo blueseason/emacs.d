@@ -2,7 +2,7 @@
 
 ;yasnippet
 (add-to-list 'load-path "~/.emacs.d/plugin")
-(require 'yasnippet-bundle)
+(require-package 'yasnippet)
 (put 'upcase-region 'disabled nil)
 
 ;;(semantic-load-enable-guady-code-helpers)
@@ -19,9 +19,8 @@
 ;;                      (semantic-analyze-current-context) (point))                                                 
 ;;                     (senator-find-tag-for-completion (regexp-quote prefix)))))))
 
-(require 'auto-complete)
-(require 'auto-complete-config)
-(require 'auto-complete-clang)
+(require-package 'auto-complete)
+(require-package 'auto-complete-clang)
 
 ;; 添加c-mode和c++-mode的hook，开启auto-complete的clang扩展  
 (defun wttr/ac-cc-mode-setup ()
@@ -62,7 +61,7 @@
 ")))  
 ;; set htmlize
 (add-to-list 'load-path "~/.emacs.d/plugin/html/")
-(require 'htmlize)
+(require-package 'htmlize)
 
 ;; cscope
 (add-hook 'c-mode-common-hook                                                                                                       
@@ -101,8 +100,6 @@
 ;;(setq load-path (cons "~/project/org-7.8.06/lisp" load-path))
 ;;(setq load-path (cons "~/project/org-7.8.06/contrib/lisp" load-path))
 
-(setq org-plantuml-jar-path
-      (expand-file-name "~/.emacs.d/plugin/plantuml.jar"))
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
@@ -112,6 +109,7 @@
    (plantuml . t)
    ))
 
+(auto-image-file-mode t)
 
 (setq org-plantuml-jar-path
       (expand-file-name "~/.emacs.d/plugin/plantuml.jar"))
