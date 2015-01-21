@@ -24,3 +24,14 @@ site-lisp/package/
 /var
 /.sqli_history
 /frame-restore-parameters
+/.achievements
+/.bookmarks.el
+/history
+/helm-adaptive-history
+/thumbs/
+/emms/
+/.smex-items
+/image-dired/
+/eshell
+/.cask/
+/.sx/
