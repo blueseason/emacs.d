@@ -93,6 +93,7 @@
 (require 'init-haskell)
 (require 'init-ruby-mode)
 (require 'init-rails)
+(require 'init-go)
 
 ;(require 'init-java)
 

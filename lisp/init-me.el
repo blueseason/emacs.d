@@ -21,6 +21,7 @@
 
 (require-package 'auto-complete)
 (require-package 'auto-complete-clang)
+(require 'auto-complete-config)
 
 ;; 添加c-mode和c++-mode的hook，开启auto-complete的clang扩展  
 (defun wttr/ac-cc-mode-setup ()
@@ -31,7 +32,7 @@
 (add-hook 'c++-mode-hook 'wttr/ac-cc-mode-setup)
 (ac-config-default)
 (global-auto-complete-mode t)
-;(define-key ac-mode-map  [(tab)] 'auto-complete)
+(define-key ac-mode-map  [(tab)] 'auto-complete)
 
 ;; (setq ac-clang-flags  (list
 ;;                        "-I/usrinclude"
