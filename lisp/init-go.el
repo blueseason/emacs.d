@@ -9,6 +9,10 @@
 
 (add-hook 'before-save-hook 'gofmt-before-save)
 
+(add-hook 'go-mode-hook
+          '(lambda ()
+             (require 'xcscope)))
+
 (add-hook 'go-mode-hook '(lambda ()
                            (local-set-key (kbd "C-c C-r") 'go-remove-unused-imports)))
 (add-hook 'go-mode-hook '(lambda ()
@@ -17,7 +21,6 @@
                            (local-set-key (kbd "C-c C-f") 'gofmt)))
 (add-hook 'go-mode-hook '(lambda ()
                            (local-set-key (kbd "C-c C-k") 'godoc)))
-
 
 (go-guru-hl-identifier-mode)
 (add-hook 'go-mode-hook #'go-guru-hl-identifier-mode)

@@ -40,6 +40,9 @@
   (add-hook 'js2-mode-hook 'sanityinc/disable-js2-checks-if-flycheck-active)
 
   (add-hook 'js2-mode-hook (lambda () (setq mode-name "JS2")))
+  (add-hook 'js2-mode-hook
+            '(lambda ()
+               (require 'xcscope)))
 
   (after-load 'js2-mode
     (js2-imenu-extras-setup)))
