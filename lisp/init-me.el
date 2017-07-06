@@ -95,7 +95,7 @@
 
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
 
-
+(setq lua-indent-level 4)
 
 ;;
 ;;(setq load-path (cons "~/project/org-7.8.06/lisp" load-path))
@@ -133,20 +133,20 @@
                                         ("@" "\\alert{%s}" nil)))
       )
 
-(require 'org-latex)
+(require 'ox)
 
 (setq org-export-latex-listings t)
-(add-to-list 'org-export-latex-classes
-          '("org-article"
-             "\\documentclass{org-article}
-             [NO-DEFAULT-PACKAGES]
-             [PACKAGES]
-             [EXTRA]"
-             ("\\section{%s}" . "\\section*{%s}")
-             ("\\subsection{%s}" . "\\subsection*{%s}")
-             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-             ("\\paragraph{%s}" . "\\paragraph*{%s}")
-             ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+;; (add-to-list 'org-export-latex-classes
+;;           '("org-article"
+;;              "\\documentclass{org-article}
+;;              [NO-DEFAULT-PACKAGES]
+;;              [PACKAGES]
+;;              [EXTRA]"
+;;              ("\\section{%s}" . "\\section*{%s}")
+;;              ("\\subsection{%s}" . "\\subsection*{%s}")
+;;              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;;              ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;;              ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 
 (require 'one)
 
