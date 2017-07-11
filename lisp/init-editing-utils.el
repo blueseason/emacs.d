@@ -5,6 +5,8 @@
 (when (eval-when-compile (version< "24.4" emacs-version))
   (electric-indent-mode 1))
 
+(maybe-require-package 'list-unicode-display)
+
 ;;----------------------------------------------------------------------------
 ;; Some basic preferences
 ;;----------------------------------------------------------------------------
@@ -89,18 +91,13 @@
 (diminish 'undo-tree-mode)
 
 
-(require-package 'highlight-symbol)
-(dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
-  (add-hook hook 'highlight-symbol-mode)
-  (add-hook hook 'highlight-symbol-nav-mode))
-(add-hook 'org-mode-hook 'highlight-symbol-nav-mode)
-(after-load 'highlight-symbol
-  (diminish 'highlight-symbol-mode)
-  (defadvice highlight-symbol-temp-highlight (around sanityinc/maybe-suppress activate)
-    "Suppress symbol highlighting while isearching."
-    (unless (or isearch-mode
-                (and (boundp 'multiple-cursors-mode) multiple-cursors-mode))
-      ad-do-it)))
+(when (maybe-require-package 'symbol-overlay)
+  (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
+    (add-hook hook 'symbol-overlay-mode))
+  (after-load 'symbol-overlay
+    (diminish 'symbol-overlay-mode)
+    (define-key symbol-overlay-mode-map (kbd "M-n") 'symbol-overlay-jump-next)
+    (define-key symbol-overlay-mode-map (kbd "M-p") 'symbol-overlay-jump-prev)))
 
 ;;----------------------------------------------------------------------------
 ;; Zap *up* to char is a handy pair for zap-to-char
@@ -263,10 +260,10 @@ on the new line if the line would have been blank.
 With arg N, insert N newlines."
   (interactive "*p")
   (let* ((do-fill-prefix (and fill-prefix (bolp)))
-	 (do-left-margin (and (bolp) (> (current-left-margin) 0)))
-	 (loc (point-marker))
-	 ;; Don't expand an abbrev before point.
-	 (abbrev-mode nil))
+         (do-left-margin (and (bolp) (> (current-left-margin) 0)))
+         (loc (point-marker))
+         ;; Don't expand an abbrev before point.
+         (abbrev-mode nil))
     (delete-horizontal-space t)
     (newline n)
     (indent-according-to-mode)
@@ -275,8 +272,8 @@ With arg N, insert N newlines."
     (goto-char loc)
     (while (> n 0)
       (cond ((bolp)
-	     (if do-left-margin (indent-to (current-left-margin)))
-	     (if do-fill-prefix (insert-and-inherit fill-prefix))))
+             (if do-left-margin (indent-to (current-left-margin)))
+             (if do-fill-prefix (insert-and-inherit fill-prefix))))
       (forward-line 1)
       (setq n (1- n)))
     (goto-char loc)
