@@ -1,14 +1,22 @@
 ;; -*- coding: utf-8 -*-
 (add-to-list 'load-path (expand-file-name "~/.emacs.d"))
 (load-file "~/.emacs.d/mgmt/cedet-1.1/common/cedet.el")
+;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
+;;; Commentary:
 
-;;; This file bootstraps the configuration, which is divided into
-;;; a number of other files.
 
-(let ((minver "24.1"))
+;; This file bootstraps the configuration, which is divided into
+;; a number of other files.
+
+;;; Code:
+
+;; Produce backtraces when errors occur: can be helpful to diagnose startup issues
+;;(setq debug-on-error t)
+
+(let ((minver "24.4"))
   (when (version< emacs-version minver)
     (error "Your Emacs is too old -- this config requires v%s or higher" minver)))
-(when (version< emacs-version "24.4")
+(when (version< emacs-version "25.1")
   (message "Your Emacs is old, and some functionality in this config will be disabled. Please upgrade if possible."))
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -21,13 +29,13 @@
 (defconst *is-a-mac* (eq system-type 'darwin))
 
 ;;----------------------------------------------------------------------------
-;; Temporarily reduce garbage collection during startup
+;; Adjust garbage collection thresholds during startup, and thereafter
 ;;----------------------------------------------------------------------------
-(defconst sanityinc/initial-gc-cons-threshold gc-cons-threshold
-  "Initial value of `gc-cons-threshold' at start-up time.")
-(setq gc-cons-threshold (* 128 1024 1024))
-(add-hook 'after-init-hook
-          (lambda () (setq gc-cons-threshold sanityinc/initial-gc-cons-threshold)))
+(let ((normal-gc-cons-threshold (* 20 1024 1024))
+      (init-gc-cons-threshold (* 128 1024 1024)))
+  (setq gc-cons-threshold init-gc-cons-threshold)
+  (add-hook 'emacs-startup-hook
+            (lambda () (setq gc-cons-threshold normal-gc-cons-threshold))))
 
 ;;----------------------------------------------------------------------------
 ;; Bootstrap config
@@ -49,10 +57,8 @@
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
-(require-package 'wgrep)
-(require-package 'project-local-variables)
 (require-package 'diminish)
-(require-package 'scratch)
+(maybe-require-package 'scratch)
 (require-package 'command-log-mode)
 
 (require 'init-frame-hooks)
@@ -70,18 +76,17 @@
 (require 'init-recentf)
 (require 'init-smex)
 (require 'init-ivy)
+;;(require 'init-helm)
 (require 'init-hippie-expand)
 (require 'init-company)
 (require 'init-windows)
 (require 'init-sessions)
-(require 'init-fonts)
 (require 'init-mmm)
 
 (require 'init-me)
 
 (require 'init-editing-utils)
 (require 'init-whitespace)
-(require 'init-fci)
 
 (require 'init-vc)
 (require 'init-darcs)
@@ -91,7 +96,7 @@
 (require 'init-projectile)
 
 (require 'init-compile)
-(require 'init-crontab)
+;;(require 'init-crontab)
 (require 'init-textile)
 (require 'init-markdown)
 (require 'init-csv)
@@ -103,11 +108,12 @@
 (require 'init-html)
 (require 'init-css)
 (require 'init-haml)
-(require 'init-python-mode)
-(unless (version<= emacs-version "24.3")
-  (require 'init-haskell))
+(require 'init-http)
+(require 'init-python)
+(require 'init-haskell)
 (require 'init-elm)
-(require 'init-ruby-mode)
+(require 'init-purescript)
+(require 'init-ruby)
 (require 'init-rails)
 (require 'init-go)
 
@@ -115,14 +121,20 @@
 
 
 (require 'init-sql)
+(require 'init-rust)
+(require 'init-toml)
+(require 'init-yaml)
+(require 'init-docker)
+(require 'init-terraform)
+(require 'init-nix)
+(maybe-require-package 'nginx-mode)
 
 
 (require 'init-paredit)
 (require 'init-lisp)
 (require 'init-slime)
-(unless (version<= emacs-version "24.2")
-  (require 'init-clojure)
-  (require 'init-clojure-cider))
+(require 'init-clojure)
+(require 'init-clojure-cider)
 (require 'init-common-lisp)
 
 (when *spell-check-support-enabled*
@@ -132,6 +144,9 @@
 
 (require 'init-folding)
 (require 'init-dash)
+
+;;(require 'init-twitter)
+;; (require 'init-mu)
 (require 'init-ledger)
 ;; Extra packages which don't require any configuration
 
@@ -141,15 +156,25 @@
 (require-package 'dsvn)
 (when *is-a-mac*
   (require-package 'osx-location))
-(maybe-require-package 'regex-tool)
+(unless (eq system-type 'windows-nt)
+  (maybe-require-package 'daemons))
+(maybe-require-package 'dotenv-mode)
+
+(when (maybe-require-package 'uptimes)
+  (setq-default uptimes-keep-count 200)
+  (add-hook 'after-init-hook (lambda () (require 'uptimes))))
+
+(when (fboundp 'global-eldoc-mode)
+  (add-hook 'after-init-hook 'global-eldoc-mode))
 
 ;;----------------------------------------------------------------------------
 ;; Allow access from emacsclient
 ;;----------------------------------------------------------------------------
-(require 'server)
-(unless (server-running-p)
-  (server-start))
-
+(add-hook 'after-init-hook
+          (lambda ()
+            (require 'server)
+            (unless (server-running-p)
+              (server-start))))
 
 ;;----------------------------------------------------------------------------
 ;; Variables configured via the interactive 'customize' interface
@@ -159,19 +184,16 @@
 
 
 ;;----------------------------------------------------------------------------
-;; Allow users to provide an optional "init-local" containing personal settings
-;;----------------------------------------------------------------------------
-(require 'init-local nil t)
-
-
-;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
 ;;----------------------------------------------------------------------------
 (require 'init-locales)
 
 
-(when (maybe-require-package 'uptimes)
-  (add-hook 'after-init-hook (lambda () (require 'uptimes))))
+;;----------------------------------------------------------------------------
+;; Allow users to provide an optional "init-local" containing personal settings
+;;----------------------------------------------------------------------------
+(require 'init-local nil t)
+
 
 
 (provide 'init)
@@ -182,3 +204,4 @@
 ;; coding: utf-8
 ;; no-byte-compile: t
 ;; End:
+;;; init.el ends here
