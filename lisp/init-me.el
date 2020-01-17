@@ -106,6 +106,7 @@
  '((python . t)
    (emacs-lisp . t)
    (ruby . t)
+   (shell . t)
    (dot . t)
    (plantuml . t)
    ))
