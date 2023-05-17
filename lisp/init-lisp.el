@@ -47,7 +47,7 @@
   (add-hook 'after-init-hook 'ipretty-mode))
 
 
-(defun sanityinc/make-read-only (expression out-buffer-name)
+(defun sanityinc/make-read-only (_expression out-buffer-name &rest _)
   "Enable `view-mode' in the output buffer - if any - so it can be closed with `\"q\"."
   (when (get-buffer out-buffer-name)
     (with-current-buffer out-buffer-name
@@ -206,9 +206,6 @@ there is no current file, eval the current buffer."
 (add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
 
-(require-package 'cl-lib-highlight)
-(with-eval-after-load 'lisp-mode
-  (cl-lib-highlight-initialize))
 
 
 ;; Delete .elc files when reverting the .el from VC or magit
@@ -273,11 +270,8 @@ there is no current file, eval the current buffer."
   (add-hook 'emacs-lisp-mode-hook 'highlight-quoted-mode))
 
 
-(when (maybe-require-package 'flycheck)
-  (require-package 'flycheck-package)
-  (with-eval-after-load 'flycheck
-    (with-eval-after-load 'elisp-mode
-      (flycheck-package-setup))))
+(when (maybe-require-package 'package-lint-flymake)
+  (add-hook 'emacs-lisp-mode-hook #'package-lint-flymake-setup))
 
 
 

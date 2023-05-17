@@ -8,9 +8,10 @@
   (when (maybe-require-package 'company)
     (add-hook 'racer-mode-hook #'company-mode)))
 
-(when (maybe-require-package 'flycheck-rust)
-  (with-eval-after-load 'rust-mode
-    (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)))
+  (when (maybe-require-package 'flycheck-rust)
+    (with-eval-after-load 'rust-mode
+      (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))))
+
 
 
 (use-package lsp-mode
